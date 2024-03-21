@@ -1,75 +1,75 @@
 import numpy as np
 from numpy.linalg import pinv
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class Global2Local(object):
-    def __init__(self, num_points):
-        self.n = num_points
-        self.GlobalPoints = np.zeros((num_points,2))
-        self.LocalPoints = np.zeros((num_points,2))
-    
-    def convert(self, points, Yaw_ego, X_ego, Y_ego):
-        # Code
-        self.GlobalPoints = points
+    def __init__(self,num_point):
+        self.np=num_point
+        self.GlobalPoints = None
+        self.LocalPoints = None
 
-        # 변환 행렬 (회전만 포함, 평행 이동은 점에 직접 적용)
+    def convert(self, points, Yaw_ego, X_ego, Y_ego):
+        self.GlobalPoints = points
+        num_points_to_convert = min(len(points), self.np)  # Ensure we do not exceed the size of LocalPoints
+        self.LocalPoints = np.zeros((num_points_to_convert, 2))  # Adjust the size if necessary
+
+        # Transformation matrix (only rotation, translation is applied directly to the point)
+        cos_yaw = np.cos(Yaw_ego)
+        sin_yaw = np.sin(Yaw_ego)
         self.TransMatrix = np.array([
-            [np.cos(Yaw_ego), np.sin(Yaw_ego)],
-            [-np.sin(Yaw_ego), np.cos(Yaw_ego)],
+            [cos_yaw, sin_yaw],
+            [-sin_yaw, cos_yaw],
         ])
 
         for i, point in enumerate(self.GlobalPoints):
-            # 전역 좌표계에서의 평행 이동 적용
+            # Apply global coordinate translation
             translated_point = np.array([point[0] - X_ego, point[1] - Y_ego])
 
-            # 변환 행렬 적용
+            # Apply transformation matrix
             P_dot = self.TransMatrix @ translated_point
 
-            # 변환된 점 저장 (Z 좌표는 무시)
+            # Store transformed point (ignoring Z coordinate)
             self.LocalPoints[i, :] = P_dot
 
 
 class PolynomialFitting(object):
-    def __init__(self, num_degree, num_points):
+    def __init__(self, num_degree,num_point):
         self.nd = num_degree
-        self.np = num_points
-        self.A = np.zeros((self.np, self.nd + 1))
-        self.b = np.zeros((self.np, 1))
-        self.coeff = np.zeros((num_degree + 1, 1))
+        self.np = num_point
+        self.coeff = None
 
     def fit(self, points):
-        points = np.array(points)  # points가 리스트라면 NumPy 배열로 변환
+        A = np.zeros((self.np, self.nd + 1))
+        b = np.zeros((self.np, 1))
+
         for i, p in enumerate(points):
             for j in range(self.nd + 1):
-                self.A[i, j] = p[0] ** (self.nd - j)
-        self.b = points[:, 1].reshape(-1, 1)  # b 벡터를 y값으로 채움
-        self.coeff = np.linalg.pinv(self.A.T @ self.A) @ self.A.T @ self.b
+                A[i, j] = p[0] ** (self.nd - j)
+        b = np.array(points)[:, 1].reshape(-1, 1)  # Fill b vector with y values
+
+        # Perform least squares fitting
+        self.coeff = np.linalg.pinv(A.T @ A) @ A.T @ b
 
 
 class PolynomialValue(object):
-    def __init__(self, num_degree, num_points):
-        self.nd = num_degree  # 다항식의 차수
-        self.np = num_points  # 포인트의 수
-        self.points = np.zeros((self.np, 2))  # x와 y값 쌍을 저장할 2차원 배열
-
+    def __init__(self,num_degree,num_point):
+        self.nd = num_degree
+        self.np = num_point
+        self.points = np.zeros((num_point, 2))
 
     def calculate(self, coeff, x_values):
-        # x_values에 대한 y값을 계산하고 저장할 리스트
         y_values = []
-
         for x in x_values:
-            y = 0
-            for i, c in enumerate(coeff):
-                # c: 계수, i: 인덱스
-                # x의 i번째 거듭제곱과 계수를 곱하여 y에 더함
-                y += c * (x ** (len(coeff) - 1 - i))
+            y = sum(c * (x ** (self.nd - i)) for i, c in enumerate(coeff))
             y_values.append(y)
 
-        # 계산된 y값들을 numpy 배열로 변환
-        y_values = np.array(y_values).reshape(-1, 1)  # y_values를 열 벡터로 변환
+        # Combine x and y values into a single array
+        self.points = np.column_stack((x_values, y_values))
 
-        # self.points 배열에 x값과 y값 쌍을 저장
-        self.points = np.hstack((x_values.reshape(-1, 1), y_values))  # x_values와 y_values를 옆으로 결합
+
+
 
 
 
