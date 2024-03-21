@@ -10,7 +10,7 @@ class PID_Controller(object):
         self.Kd = D_Gain
         self.step_time = step_time
         self.error_old = (reference - measure)
-        self.s_error = self.error_old * self.step_time
+        self.s_error = 0
         self.u = 0.0
     
     def ControllerInput(self, reference, measure):

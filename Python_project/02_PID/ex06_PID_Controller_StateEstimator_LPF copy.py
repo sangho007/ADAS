@@ -3,18 +3,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class PID_Controller(object):
-    def __init__():
+    def __init__(self, reference, measure, step_time, P_Gain=0.4, D_Gain=0.9, I_Gain=0.02):
         # Code
-    
-    def ControllerInput():
+        self.Kp = P_Gain
+        self.Ki = I_Gain
+        self.Kd = D_Gain
+        self.step_time = step_time
+        self.error_old = (reference - measure)
+        self.s_error = 0
+        self.u = 0.0
+
+    def ControllerInput(self, reference, measure):
         # Code
+        self.error = reference - measure
+        self.d_error = (self.error - self.error_old) / self.step_time
+        self.s_error += self.error * self.step_time  # integral 이므로 step 곱해주자
+        self.u = self.Kp * self.error + self.Kd * self.d_error + self.Ki * self.s_error
+        self.error_old = self.error
         
 class LowPassFilter:
-    def __init__():
-        # Code
- 
-    def estimate():
-        # Code
+    def __init__(self, y_initial_measure, alpha=0.8):
+        self.y_estimate = y_initial_measure
+        self.alpha = alpha
+
+    def estimate(self, y_measure):
+        self.y_estimate = (self.alpha) * self.y_estimate + (1 - self.alpha) * y_measure
 
 
 if __name__ == "__main__":

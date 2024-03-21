@@ -8,10 +8,16 @@ class PID_Controller_ConstantTimeGap(object):
         self.timegap = timegap
         self.space = ego_vx * self.timegap
         # Code
-    
+        self.Kp = P_Gain
+        self.Ki = I_Gain
+        self.Kd = D_Gain
+
+        self.error_prev = target_x - ego_x
+        self.s_error = 0
+        self.step_time = step_time
     def ControllerInput(self, target_x, ego_x, ego_vx):
         # Code
-        
+
 
 if __name__ == "__main__":
     

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class VehicleModel(object):
     def __init__(self, step_time, R, force_ratio, force_bias, m=1.0):
@@ -14,3 +15,10 @@ class VehicleModel(object):
     def ControlInput(self, u):
         self.Y = self.A @ self.Y  +  self.B * u * self.r_f + self.bias
         self.y_measure = self.C @ self.Y + np.random.normal(0.0, self.R)
+
+
+
+
+
+
+
