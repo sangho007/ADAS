@@ -5,10 +5,21 @@ import matplotlib.pyplot as plt
 class PID_Controller(object):
     def __init__(self, reference, measure, step_time, P_Gain=0.4, D_Gain=0.9, I_Gain=0.02):
         # Code
+        self.Kp = P_Gain
+        self.Ki = I_Gain
+        self.Kd = D_Gain
+        self.step_time = step_time
+        self.error_old = (reference - measure)
+        self.s_error = self.error_old * self.step_time
+        self.u = 0.0
     
     def ControllerInput(self, reference, measure):
         # Code
-        
+        self.error = reference - measure
+        self.d_error = (self.error - self.error_old) / self.step_time
+        self.s_error += self.error * self.step_time # integral 이므로 step 곱해주자
+        self.u = self.Kp * self.error + self.Kd * self.d_error + self.Ki * self.s_error
+        self.error_old = self.error
         
 if __name__ == "__main__":
     target_y = 0.0
