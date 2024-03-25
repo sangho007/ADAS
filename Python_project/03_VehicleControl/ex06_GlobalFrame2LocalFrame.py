@@ -1,79 +1,53 @@
 import numpy as np
-from numpy.linalg import pinv
 import matplotlib.pyplot as plt
-import numpy as np
-
 
 class Global2Local(object):
-    def __init__(self,num_point):
-        self.np=num_point
-        self.GlobalPoints = None
-        self.LocalPoints = None
-
+    def __init__(self, num_points):
+        self.n = num_points
+        self.GlobalPoints = np.zeros((num_points,2))
+        self.LocalPoints = np.zeros((num_points,2))
+    
     def convert(self, points, Yaw_ego, X_ego, Y_ego):
         self.GlobalPoints = points
-        num_points_to_convert = min(len(points), self.np)  # Ensure we do not exceed the size of LocalPoints
-        self.LocalPoints = np.zeros((num_points_to_convert, 2))  # Adjust the size if necessary
-
-        # Transformation matrix (only rotation, translation is applied directly to the point)
-        cos_yaw = np.cos(Yaw_ego)
-        sin_yaw = np.sin(Yaw_ego)
-        self.TransMatrix = np.array([
-            [cos_yaw, sin_yaw],
-            [-sin_yaw, cos_yaw],
-        ])
-
-        for i, point in enumerate(self.GlobalPoints):
-            # Apply global coordinate translation
-            translated_point = np.array([point[0] - X_ego, point[1] - Y_ego])
-
-            # Apply transformation matrix
-            P_dot = self.TransMatrix @ translated_point
-
-            # Store transformed point (ignoring Z coordinate)
-            self.LocalPoints[i, :] = P_dot
-
-
+        self.theta = -Yaw_ego
+        self.rotation_matrix = np.array([[np.cos(self.theta), -np.sin(self.theta)],[np.sin(self.theta), np.cos(self.theta)]])
+        for i in range(self.n):
+            point_convert = np.transpose(self.GlobalPoints[i]-[X_ego, Y_ego])
+            point_convert = self.rotation_matrix @ point_convert
+            self.LocalPoints[i] = np.transpose(point_convert)
+            
 class PolynomialFitting(object):
-    def __init__(self, num_degree,num_point):
+    def __init__(self, num_degree, num_points):
         self.nd = num_degree
-        self.np = num_point
-        self.coeff = None
-
+        self.np = num_points
+        self.A = np.zeros((self.np, self.nd+1))
+        self.b = np.zeros((self.np,1))
+        self.coeff = np.zeros((num_degree+1,1))
+        
     def fit(self, points):
-        A = np.zeros((self.np, self.nd + 1))
-        b = np.zeros((self.np, 1))
-
-        for i, p in enumerate(points):
-            for j in range(self.nd + 1):
-                A[i, j] = p[0] ** (self.nd - j)
-        b = np.array(points)[:, 1].reshape(-1, 1)  # Fill b vector with y values
-
-        # Perform least squares fitting
-        self.coeff = np.linalg.pinv(A.T @ A) @ A.T @ b
-
+        for i in range(self.np):
+            for j in range(self.nd+1):
+                self.A[i][j] = points[i][0]**(self.nd-j)
+            self.b[i][0] = points[i][1]
+        self.coeff = np.linalg.inv(self.A.T@self.A)@self.A.T@self.b
 
 class PolynomialValue(object):
-    def __init__(self,num_degree,num_point):
+    def __init__(self, num_degree, num_points):
         self.nd = num_degree
-        self.np = num_point
-        self.points = np.zeros((num_point, 2))
-
-    def calculate(self, coeff, x_values):
-        y_values = []
-        for x in x_values:
-            y = sum(c * (x ** (self.nd - i)) for i, c in enumerate(coeff))
-            y_values.append(y)
-
-        # Combine x and y values into a single array
-        self.points = np.column_stack((x_values, y_values))
-
-
-
-
-
-
-
+        self.np = num_points
+        self.x = np.zeros((1, self.nd+1))
+        self.y = np.zeros((num_points, 1))
+        self.points = np.zeros((self.np, 2))
+        
+    def calculate(self, coeff, x):
+        for i in range(self.np):
+            for j in range(self.nd+1):
+                self.x[0][j] = x[i]**(self.nd-j)
+            self.y[i][0] = self.x@coeff
+            self.points[i][0] = x[i]
+            self.points[i][1] = self.y[i][0]
+        
+        
 if __name__ == "__main__":
     num_degree = 3
     num_point = 4

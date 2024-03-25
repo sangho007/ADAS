@@ -6,7 +6,32 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
-    
+def polyval(coeff, x):
+    x_matrix = np.zeros((1, np.size(coeff)))
+    for i in range(np.size(coeff)):
+        x_matrix[0][i] = (x**(np.size(coeff)-1-i))
+    y = x_matrix@coeff
+    return y[0][0]
+
+class StanleyMethod(object):
+    def __init__(self, step_time, coeff, Vx):
+        self.step_time = step_time
+        self.HA = coeff[-2][0]
+        self.pos = coeff[-1][0]
+        self.epsilon = 1e-7
+
+    # Code
+    def ControllerInput(self,coeff,Vx):
+
+        self.k = 4.5
+        self.HA = coeff[-2][0]
+        self.pos = coeff[-1][0]
+        self.u =self.HA +np.arctan(self.k * self.pos/(Vx + self.epsilon))
+
+
+
+
+
 if __name__ == "__main__":
     step_time = 0.1
     simulation_time = 30.0
@@ -17,11 +42,7 @@ if __name__ == "__main__":
     num_point = 5
     x_local = np.arange(0.0, 10.0, 0.5)
 
-    class StanleyMethod(object):
-        def __init__(self):
-            # Code
-        def ControllerInput(self):
-            # Code
+
     
     time = []
     X_ego = []

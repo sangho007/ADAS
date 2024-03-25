@@ -27,8 +27,8 @@ if __name__ == "__main__":
     frameconverter = Global2Local(num_point)
     polynomialfit = PolynomialFitting(num_degree,num_point)
     polynomialvalue = PolynomialValue(num_degree,np.size(x_local))
-    controller = PID_Controller_Kinematic(step_time, polynomialvalue.points[0][0], 0.0)
-    #
+    controller = PID_Controller_Kinematic(step_time, polynomialvalue.y[0][0], 0.0)
+    
     for i in range(int(simulation_time/step_time)):
         time.append(step_time*i)
         X_ego.append(ego_vehicle.X)
@@ -39,9 +39,8 @@ if __name__ == "__main__":
         frameconverter.convert(Points_ref, ego_vehicle.Yaw, ego_vehicle.X, ego_vehicle.Y)
         polynomialfit.fit(frameconverter.LocalPoints)
         polynomialvalue.calculate(polynomialfit.coeff, x_local)
-        controller.ControllerInput(polynomialvalue.points[0][0], 0.0)
+        controller.ControllerInput(polynomialvalue.y[0][0], 0.0)
         ego_vehicle.update(controller.u, Vx)
-
 
         
     plt.figure(1)

@@ -6,7 +6,42 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
-    
+def polyval(coeff, x):
+    x_matrix = np.zeros((1, np.size(coeff)))
+    for i in range(np.size(coeff)):
+        x_matrix[0][i] = (x**(np.size(coeff)-1-i))
+    y = x_matrix@coeff
+    return y[0][0]
+
+class PID_Controller_Kinematic(object):
+    def __init__(self, step_time, coeff, Vx, Kp=1.0, Ki=0, Kd=0):
+        # Code
+        self.dt = step_time
+        self.Kp = Kp
+        self.Kd = Kd
+        self.Ki = Ki
+
+        self.look_aheadTime = 1.0
+        self.d_l = Vx * self.look_aheadTime
+
+        self.error = polyval(coeff, self.d_l)
+        self.error_prev = self.error
+
+        self.max_delta_error = 3.0
+        self.error_i = 0
+
+        # self.delta_curve = Vx**2 ()
+
+    def ControllerInput(self, coeff, Vx):
+        # Code
+        self.d_l = Vx * self.look_aheadTime
+        self.error = self.error = polyval(coeff, self.d_l)
+        self.error_d = np.min([(self.error - self.error_prev), self.max_delta_error]) / self.dt
+        self.error_i = self.error_i + self.error * self.dt
+        self.u = self.Kp * self.error + self.Kd * self.error_d + self.Ki * self.error_i
+        self.error_prev = self.error
+
+
 if __name__ == "__main__":
     step_time = 0.1
     simulation_time = 30.0
@@ -17,11 +52,7 @@ if __name__ == "__main__":
     num_point = 5
     x_local = np.arange(0.0, 10.0, 0.5)
 
-    class PD_Controller(object):
-        def __init__(self):
-            # Code
-        def ControllerInput(self):
-            # Code
+
     
     time = []
     X_ego = []

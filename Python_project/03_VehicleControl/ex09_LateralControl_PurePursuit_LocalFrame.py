@@ -6,6 +6,30 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
+
+def polyval(coeff, x):
+    x_matrix = np.zeros((1, np.size(coeff)))
+    for i in range(np.size(coeff)):
+        x_matrix[0][i] = (x**(np.size(coeff)-1-i))
+    y = x_matrix@coeff
+    return y[0][0]
+
+class PurePursuit(object):
+    def __init__(self, step_time, coeff, Vx ,L = 3 , t_look = 1.0):
+        # Code
+        self.L = L # 차량 전장 길이
+        self.t_look = t_look #
+        self.d_l = Vx * t_look
+        self.time_lookahead = t_look
+        self.y = polyval(coeff, self.d_l)
+
+
+    def ControllerInput(self,coeff, Vx):
+        # Code
+        self.d_l = Vx * self.t_look
+        self.y = polyval(coeff, self.d_l)
+        self.u = np.arctan((2 * self.y * self.L)/(self.d_l ** 2 + self.y**2))
+
     
 if __name__ == "__main__":
     step_time = 0.1
@@ -17,12 +41,6 @@ if __name__ == "__main__":
     num_point = 5
     x_local = np.arange(0.0, 10.0, 0.5)
 
-    class PD_Controller(object):
-        def __init__(self):
-            # Code
-        def ControllerInput(self):
-            # Code
-    
     time = []
     X_ego = []
     Y_ego = []
