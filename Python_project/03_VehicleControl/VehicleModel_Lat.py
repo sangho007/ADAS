@@ -12,6 +12,8 @@ class VehicleModel_Lat(object):
         self.X = 0
         self.Y = 0
 
+
+        
     def update(self, delta, Vx):
         self.vx = Vx
         self.delta = np.clip(delta,-0.5,0.5)

@@ -6,32 +6,18 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
-def polyval(coeff, x):
-    x_matrix = np.zeros((1, np.size(coeff)))
-    for i in range(np.size(coeff)):
-        x_matrix[0][i] = (x**(np.size(coeff)-1-i))
-    y = x_matrix@coeff
-    return y[0][0]
-
 class StanleyMethod(object):
-    def __init__(self, step_time, coeff, Vx):
-        self.step_time = step_time
+    def __init__(self, coeff, Vx):
+        self.epsilon = 0.001
         self.HA = coeff[-2][0]
-        self.pos = coeff[-1][0]
-        self.epsilon = 1e-7
-
-    # Code
-    def ControllerInput(self,coeff,Vx):
-
-        self.k = 4.5
+        self.Pos = coeff[-1][0]
+        self.u = self.HA + np.arctan(self.Pos/(Vx+self.epsilon))
+    def ControllerInput(self, coeff, Vx):
         self.HA = coeff[-2][0]
-        self.pos = coeff[-1][0]
-        self.u =self.HA +np.arctan(self.k * self.pos/(Vx + self.epsilon))
-
-
-
-
-
+        self.Pos = coeff[-1][0]
+        self.u = self.HA + np.arctan(self.Pos/(Vx+self.epsilon))
+    
+    
 if __name__ == "__main__":
     step_time = 0.1
     simulation_time = 30.0
@@ -43,7 +29,6 @@ if __name__ == "__main__":
     x_local = np.arange(0.0, 10.0, 0.5)
 
 
-    
     time = []
     X_ego = []
     Y_ego = []
@@ -52,7 +37,7 @@ if __name__ == "__main__":
     frameconverter = Global2Local(num_point)
     polynomialfit = PolynomialFitting(num_degree,num_point)
     polynomialvalue = PolynomialValue(num_degree,np.size(x_local))
-    controller = StanleyMethod(step_time, polynomialfit.coeff, Vx)
+    controller = StanleyMethod(polynomialfit.coeff, Vx)
     
     for i in range(int(simulation_time/step_time)):
         time.append(step_time*i)

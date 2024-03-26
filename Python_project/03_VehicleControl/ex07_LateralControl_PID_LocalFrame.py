@@ -33,6 +33,7 @@ if __name__ == "__main__":
         time.append(step_time*i)
         X_ego.append(ego_vehicle.X)
         Y_ego.append(ego_vehicle.Y)
+        print(ego_vehicle.X)
         X_ref_convert = np.arange(ego_vehicle.X, ego_vehicle.X+5.0, 1.0)
         Y_ref_convert = 2.0-2*np.cos(X_ref_convert/10)
         Points_ref = np.transpose(np.array([X_ref_convert, Y_ref_convert]))

@@ -6,30 +6,27 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
-
 def polyval(coeff, x):
-    x_matrix = np.zeros((1, np.size(coeff)))
+    x_matrix = np.zeros((1,np.size(coeff)))
+    #print(x_matrix)
     for i in range(np.size(coeff)):
-        x_matrix[0][i] = (x**(np.size(coeff)-1-i))
+        x_matrix[0][i]=(x**(np.size(coeff)-1-i))
     y = x_matrix@coeff
     return y[0][0]
 
 class PurePursuit(object):
-    def __init__(self, step_time, coeff, Vx ,L = 3 , t_look = 1.0):
-        # Code
-        self.L = L # 차량 전장 길이
-        self.t_look = t_look #
-        self.d_l = Vx * t_look
-        self.time_lookahead = t_look
-        self.y = polyval(coeff, self.d_l)
-
-
-    def ControllerInput(self,coeff, Vx):
-        # Code
-        self.d_l = Vx * self.t_look
-        self.y = polyval(coeff, self.d_l)
-        self.u = np.arctan((2 * self.y * self.L)/(self.d_l ** 2 + self.y**2))
-
+    def __init__(self, coeff, Vx, L, lookahead_time = 1.0):
+        self.L = L
+        self.epsilon = 0.001
+        self.t_lh = lookahead_time
+        self.d_lh = Vx*self.t_lh
+        self.y = polyval(coeff, self.d_lh)
+        self.u = np.arctan(2*self.L*self.y/(self.d_lh**2+self.y**2+self.epsilon))
+    def ControllerInput(self, coeff, Vx):
+        self.d_lh = Vx*self.t_lh
+        self.y = polyval(coeff, self.d_lh)
+        self.u = np.arctan(2*self.L*self.y/(self.d_lh**2+self.y**2+self.epsilon))
+        
     
 if __name__ == "__main__":
     step_time = 0.1
@@ -40,6 +37,8 @@ if __name__ == "__main__":
     num_degree = 3
     num_point = 5
     x_local = np.arange(0.0, 10.0, 0.5)
+    error_rms = 0.0
+    err_i = 0
 
     time = []
     X_ego = []
@@ -49,7 +48,7 @@ if __name__ == "__main__":
     frameconverter = Global2Local(num_point)
     polynomialfit = PolynomialFitting(num_degree,num_point)
     polynomialvalue = PolynomialValue(num_degree,np.size(x_local))
-    controller = PurePursuit(step_time, polynomialfit.coeff, Vx)
+    controller = PurePursuit(polynomialfit.coeff, Vx, ego_vehicle.L)
     
     for i in range(int(simulation_time/step_time)):
         time.append(step_time*i)
@@ -63,7 +62,10 @@ if __name__ == "__main__":
         polynomialvalue.calculate(polynomialfit.coeff, x_local)
         controller.ControllerInput(polynomialfit.coeff, Vx)
         ego_vehicle.update(controller.u, Vx)
+        error_rms = error_rms + np.sqrt((ego_vehicle.Y-Y_ref_convert[0])**2)
+        err_i = err_i+1
 
+    print(error_rms/err_i)
         
     plt.figure(1)
     plt.plot(X_ref, Y_ref,'k-',label = "Reference")
